@@ -1,3 +1,11 @@
+// to dalsieho suboru si mozem definovat vsetky struktury a tak
+// definujes struktury na vsetky rozne typy
+// dostanes spravy type a id vies aku ma velkost
+// toto vsetko v 1500 dlhom buffery
+// a potom si este definujes max_lenghy 
+// podla max_lengu jednotlivych typov v contente posielas do fukncie, ktora ti zisti dlzku retazca daneho typu, toto cez ukazatele
+// a potom sa posunies o konkretnu dlzku v skutocnom kontexte
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +16,63 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#define DISPLAY_NAME_MAX_LENGTH 20
+#define CHANNEL_ID_MAX_LENGTH 20
+#define USERNAME_MAX_LENGTH 20  
+#define SECRET_MAX_LENGHT 128
+#define MESSAGE_CONTENT_MAX_LENGTH 1400
+
+// Define message types
+typedef enum {
+    MESSAGE_TYPE_AUTH,
+    MESSAGE_TYPE_JOIN,
+    MESSAGE_TYPE_ERR,
+    MESSAGE_TYPE_BYE,
+    MESSAGE_TYPE_MSG,
+    MESSAGE_TYPE_REPLY,
+    MESSAGE_TYPE_NOT_REPLY
+} MessageType;
+
+// Define structures for message arguments
+typedef struct {
+    char username[USERNAME_MAX_LENGTH + 1]; 
+    char displayName[DISPLAY_NAME_MAX_LENGTH + 1]; 
+    char secret[SECRET_MAX_LENGHT + 1]; 
+} StructAuth;
+
+typedef struct {
+    char channelID[CHANNEL_ID_MAX_LENGTH + 1]; 
+    char displayName[DISPLAY_NAME_MAX_LENGTH + 1]; 
+} StructJoin;
+
+typedef struct {
+    char displayName[DISPLAY_NAME_MAX_LENGTH + 1]; 
+    char messageContent[MESSAGE_CONTENT_MAX_LENGTH + 1]; 
+} StructErr, StructMsg;
+
+typedef struct {
+    bool isSuccess; 
+    char messageContent[MESSAGE_CONTENT_MAX_LENGTH + 1]; 
+} StructReply;
+
+// Define message structure
+typedef struct {
+    MessageType type;
+    uint16_t messageID;
+    union {
+        StructAuth auth;
+        StructJoin join;
+        StructErr err;
+        StructMsg msg;
+        StructReply reply;
+    } data;
+} Message;
+
+size_t find_null_character_position(const char *str, size_t max_length) {
+    size_t length = strnlen(str, max_length); // Určí dĺžku reťazca, ale najviac max_length znakov
+    return length;
+}
 
 // vycistit si kod od nepotrebneho bordelu
 // zistit co vsetko ako funguje a okomentovat si to 
@@ -34,7 +99,7 @@
 struct Message {
     uint8_t type;
     uint16_t messageID;
-    char content[1400];
+    char content[1500];
 };
 
 // tuto mozem naimplementovat cele handlovanie parametrov
@@ -60,24 +125,22 @@ struct Message receiveMessage(int sockfd, struct sockaddr_in* server_addr) {
     return msg;
 }
 
-// AF_INET = IPV4
-// SOCK_DGRAM = UDP 
-
-// void connect_socket(){
-//     int family = AF_INET;
-//     int type = SOCK_DGRAM;
-//     int client_socket = socket(family, type, 0);
-//     if (client_socket <= 0) 
-//         {
-//         perror("ERROR: socket");
-//         exit(EXIT_FAILURE);
-//         }
-
-//     return;
-// }
-
 
 int main(int argc, char *argv[]){
+    // Allocate memory for the test_buffer_for_max_length_function
+    char *test_buffer_for_max_length_function = (char *)malloc(50 * sizeof(char)); // Allocate memory for a test_buffer_for_max_length_function of size 50
+
+    // Populate the test_buffer_for_max_length_function with content
+    strcpy(test_buffer_for_max_length_function, "Hello, world!"); // Copy the string into the test_buffer_for_max_length_function
+
+    // Call the find_null_character_position function with the test_buffer_for_max_length_function and the maximum length to consider
+    size_t length = find_null_character_position(test_buffer_for_max_length_function, 50);
+
+    // Output the length until the first null character
+    printf("Length until the first null character: %zu\n", length);
+
+    // Free the allocated memory for the test_buffer_for_max_length_function
+    free(test_buffer_for_max_length_function);
 
     printf("Program sa uspesne spusti");
 
@@ -131,13 +194,6 @@ int main(int argc, char *argv[]){
     struct Message receivedMsg;
     receivedMsg = receiveMessage(client_socket, &servaddr);
 
-    // TU JE CHYBA
-    // // Receive response from the server
-    // if (recvfrom(client_socket, buffer, MAXLINE, 0, NULL, NULL) < 0) {
-    //     perror("Error: recvfrom failed");
-    //     close(client_socket);
-    //     exit(EXIT_FAILURE);
-    // }
 
     // // Print the received response
     // printf("Server response: %s\n", buffer);
