@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <poll.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -242,8 +243,44 @@ int main(int argc, char *argv[]){
     bind_addr.sin_port = htons(PORT + 1);
     bind(client_socket, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in));
 
+    // Define pollfd structures
+    struct pollfd fds[2];
+    fds[0].fd = STDIN_FILENO; // For stdin
+    fds[0].events = POLLIN;
+    fds[1].fd = client_socket; // For socket
+    fds[1].events = POLLIN;
+
     // puts("Neposlal som nikde nic");
     while(true){ 
+        // tu bude nejaky stavovy podla zadania
+
+        // // Wait for events on multiple file descriptors
+        int ret = poll(fds, 2, -1); // -1 for indefinite timeout
+
+
+        // if (ret < 0) {
+        //     perror("Poll error");
+        //     exit(EXIT_FAILURE);
+        // }
+
+        // TU SPRACOVAVAM MOJE, KLIENTOVE SPRAVY/COMMANDY
+        // // Check for events
+        // if (fds[0].revents & POLLIN) {
+        //     // Message from stdin
+        //     char buffer[MAXLINE];
+        //     fgets(buffer, MAXLINE, stdin);
+        //     // Process and send message
+        //     // ...
+        // }
+
+        // TU SPRACOVAVAM SPRAVY OD SERVERU
+        // if (fds[1].revents & POLLIN) {
+        //     // Message from server
+        //     struct Message msg;
+        //     recvfrom(sockfd, &msg, sizeof(msg), 0, NULL, NULL);
+        //     // Process received message
+        //     // ...
+        // }
 
         // CLIENT POSIELA IBA BUFFER 
         // Send message to the server
