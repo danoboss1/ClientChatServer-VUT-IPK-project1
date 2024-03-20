@@ -23,6 +23,9 @@
 #define SECRET_MAX_LENGHT 128
 #define MESSAGE_CONTENT_MAX_LENGTH 1400
 
+#define FULL_MESSAGE_BUFFER 1500
+
+
 // Define message types
 typedef enum {
     MESSAGE_TYPE_AUTH,
@@ -52,7 +55,8 @@ typedef struct {
 } StructErr, StructMsg;
 
 typedef struct {
-    bool isSuccess; 
+    uint8_t result;
+    uint16_t ref_messageID;
     char messageContent[MESSAGE_CONTENT_MAX_LENGTH + 1]; 
 } StructReply;
 
@@ -96,11 +100,11 @@ size_t find_null_character_position(const char *str, size_t max_length) {
 
 
 // Define message structure
-struct Message {
-    uint8_t type;
-    uint16_t messageID;
-    char content[1500];
-};
+// struct Message {
+//     uint8_t type;
+//     uint16_t messageID;
+//     char content[1400];
+// };
 
 // tuto mozem naimplementovat cele handlovanie parametrov
 void process_arguments(int argc, char *argv[]){
@@ -117,18 +121,75 @@ void process_arguments(int argc, char *argv[]){
 }
 
 // Function to receive message
-struct Message receiveMessage(int sockfd, struct sockaddr_in* server_addr) {
-    struct Message msg;
+Message receiveMessage(int sockfd, struct sockaddr_in* server_addr) {
+    Message msg;
     socklen_t len = sizeof(*server_addr);
     // Receive message
     recvfrom(sockfd, &msg, sizeof(msg), 0, (struct sockaddr*)server_addr, &len);
     return msg;
 }
 
+//FUNKCIA NA HANDLOVANIE SPRAVY
+size_t Handle_message_from_server(const char *buffer, Message *msg){
+    memcpy(&(msg->type),buffer, sizeof(uint8_t));
+    memcpy(&(msg->messageID), buffer+1, sizeof(uint16_t));
+
+    // size_t je 64 bitovy unsigned integer
+    size_t offset = sizeof(uint8_t) + sizeof(uint16_t); // Offset for the content
+
+    switch (msg->type) {
+        case AUTH:
+            size_t content_length = find_null_character_position(buffer + offset, USERNAME_MAX_LENGTH) + 1;
+            memcpy(msg->data.auth.username, buffer + offset, content_length);
+            offset += content_length;
+            size_t content_length = find_null_character_position(buffer + offset, DISPLAY_NAME_MAX_LENGTH) + 1;
+            memcpy(msg->data.auth.displayName, buffer + offset, content_length);
+            offset += content_length;
+            size_t content_length = find_null_character_position(buffer + offset, SECRET_MAX_LENGHT) + 1;
+            memcpy(msg->data.auth.secret, buffer + offset, content_length);
+            offset += content_length; // to idk ci potrebujem
+        case JOIN:
+            size_t content_length = find_null_character_position(buffer + offset, CHANNEL_ID_MAX_LENGTH) + 1;
+            memcpy(msg->data.join.channelID, buffer + offset, content_length);
+            offset += content_length;
+            size_t content_length = find_null_character_position(buffer + offset, DISPLAY_NAME_MAX_LENGTH) + 1;
+            memcpy(msg->data.join.displayName, buffer + offset, content_length);
+        case ERR:
+            size_t content_length = find_null_character_position(buffer + offset, DISPLAY_NAME_MAX_LENGTH) + 1;
+            memcpy(msg->data.err.displayName, buffer + offset, content_length);
+            offset += content_length;
+            size_t content_length = find_null_character_position(buffer + offset, MESSAGE_CONTENT_MAX_LENGTH) + 1;
+            memcpy(msg->data.err.messageContent, buffer + offset, content_length);
+        case BYE:
+            break;
+        case MSG:
+            size_t content_length = find_null_character_position(buffer + offset, DISPLAY_NAME_MAX_LENGTH) + 1;
+            memcpy(msg->data.msg.displayName, buffer + offset, content_length);
+            offset += content_length;
+            size_t content_length = find_null_character_position(buffer + offset, MESSAGE_CONTENT_MAX_LENGTH) + 1;
+            memcpy(msg->data.msg.messageContent, buffer + offset, content_length);
+        case REPLY:
+            // REPLY JE DEFINOVANY NA 3 STAVY V ZADANI
+            memcpy(&(msg->data.reply.result),buffer, sizeof(uint8_t));
+            memcpy(&(msg->data.reply.ref_messageID), buffer+1, sizeof(uint16_t));
+
+            offset += sizeof(uint8_t);
+            offset += sizeof(uint16_t);
+
+            size_t content_length = find_null_character_position(buffer + offset, MESSAGE_CONTENT_MAX_LENGTH) + 1;
+            memcpy(msg->data.reply.messageContent, buffer + offset, content_length);
+        default:
+            break;
+            //TU MOZNO NEJAKA CHYBA
+    }
+
+}
+
 
 int main(int argc, char *argv[]){
     // Allocate memory for the test_buffer_for_max_length_function
     char *test_buffer_for_max_length_function = (char *)malloc(50 * sizeof(char)); // Allocate memory for a test_buffer_for_max_length_function of size 50
+
 
     // Populate the test_buffer_for_max_length_function with content
     strcpy(test_buffer_for_max_length_function, "Hello, world!"); // Copy the string into the test_buffer_for_max_length_function
@@ -137,21 +198,23 @@ int main(int argc, char *argv[]){
     size_t length = find_null_character_position(test_buffer_for_max_length_function, 50);
 
     // Output the length until the first null character
-    printf("Length until the first null character: %zu\n", length);
+    // printf("Length until the first null character: %zu\n", length);
 
     // Free the allocated memory for the test_buffer_for_max_length_function
     free(test_buffer_for_max_length_function);
 
-    printf("Program sa uspesne spusti");
+    // printf("Program sa uspesne spusti");
 
     process_arguments(argc, argv);
 
-    printf("coje");
+    // printf("coje");
 
     // connect_socket();
 
-    char buffer[MAXLINE];
-    char *message = "Hello Server";
+    // char buffer[MAXLINE];
+    // char *message = "Hello Server";
+    char input_line[FULL_MESSAGE_BUFFER + 1];
+    fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
     struct sockaddr_in servaddr;
 
     // Clear servaddr
@@ -160,7 +223,7 @@ int main(int argc, char *argv[]){
     servaddr.sin_port = htons(PORT);
     servaddr.sin_family = AF_INET;
 
-    puts("Nikde som nic nevytvoril");
+    // puts("Nikde som nic nevytvoril");
 
     // Create datagram socket
     int family = AF_INET;
@@ -179,20 +242,24 @@ int main(int argc, char *argv[]){
     bind_addr.sin_port = htons(PORT + 1);
     bind(client_socket, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in));
 
-    puts("Neposlal som nikde nic");
+    // puts("Neposlal som nikde nic");
+    while(true){ 
 
-    // Send message to the server
-    if (sendto(client_socket, message, strlen(message), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        perror("Error: sendto failed");
-        close(client_socket);
-        exit(EXIT_FAILURE);
+        // CLIENT POSIELA IBA BUFFER 
+        // Send message to the server
+        if (sendto(client_socket, input_line, strlen(input_line), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+            perror("Error: sendto failed");
+            close(client_socket);
+            exit(EXIT_FAILURE);
+        }
+
+        // puts("Dostal som sa za sendto");
+
+        // toto je na receiveMessage funkciu
+        Message receivedMsg;
+        receivedMsg = receiveMessage(client_socket, &servaddr);
+
     }
-
-    puts("Dostal som sa za sendto");
-
-    // toto je na receiveMessage funkciu
-    struct Message receivedMsg;
-    receivedMsg = receiveMessage(client_socket, &servaddr);
 
 
     // // Print the received response
