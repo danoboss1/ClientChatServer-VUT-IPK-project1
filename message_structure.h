@@ -8,6 +8,8 @@
 
 
 // Define message types
+// uvidim ci toto tu necham
+// lebo to robi chybu ked sa snazim priradin 0x00, 0x01 hodnoty
 typedef enum {
     MESSAGE_TYPE_AUTH,
     MESSAGE_TYPE_JOIN,
@@ -43,7 +45,7 @@ typedef struct {
 
 // Define message structure
 typedef struct {
-    MessageType type;
+    uint8_t type;
     uint16_t messageID;
     union {
         StructAuth auth;
