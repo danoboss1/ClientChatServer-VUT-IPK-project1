@@ -11,6 +11,8 @@
 
 #include "client.h"
 
+uint16_t msg_id = 1;
+
 //TODO: IFDEF PRI HEADER SUBOROCH
 
 //TODO2: 
@@ -130,11 +132,45 @@ int main(int argc, char *argv[]){
         // toto je trochu zle lebo ta sprava vyzera trochu inak
         if (fds[0].revents & POLLIN) {
 
-            // // TOTO JE NA CITANIE JEDNEHO RIADKU Z STANDARTNEHO VSTUPU = SPRAVA CO POSIELAM SERVERU
-            // fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
+            // TOTO JE NA CITANIE JEDNEHO RIADKU Z STANDARTNEHO VSTUPU = SPRAVA CO POSIELAM SERVERU
+            fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
+
+            uint8_t type = 0x02;
+            char delete_auth_zaciatok[5] = "";
+            char username[USERNAME_MAX_LENGTH + 1] = "";
+            char display_name[DISPLAY_NAME_MAX_LENGTH + 1] = "";
+            char secret[SECRET_MAX_LENGHT + 1] = "";
 
             // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
-            // sscanf(input_line, "%s %s %s %s", m_type, username, displayname, secret
+            sscanf(input_line, "%s %s %s %s", delete_auth_zaciatok, username, display_name, secret);
+
+            size_t username_length = strlen(username);
+            size_t display_name_length = strlen(display_name);
+            // printf("%ld", display_name_length);
+            size_t secret_length = strlen(secret);
+
+            size_t message_size = sizeof(uint8_t) + sizeof(uint16_t) + username_length + display_name_length + secret_length + 1;  
+
+            // Populate buffer
+            uint8_t *ptr = (uint8_t *)line_to_send_from_client;
+            *ptr++ = type;
+            memcpy(ptr, &msg_id, sizeof(uint16_t));
+            ptr += sizeof(uint16_t);
+            strcpy(ptr, username);
+            ptr += username_length + 1;
+            strcpy(ptr, display_name);
+            ptr += display_name_length + 1;
+            strcpy(ptr, secret);
+
+            //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
+
+            if (sendto(client_socket, line_to_send_from_client, strlen(input_line), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+            perror("Error: sendto failed");
+            close(client_socket);
+            exit(EXIT_FAILURE);
+            }
+
+            msg_id++;
 
             // // tato funkcia mi to rozdeli do tej struktury a ja to musim este nejako zlozit do bufferu, ktory poslem serveru
             // Handle_message_from_server(input_line, &client_message);
@@ -160,14 +196,6 @@ int main(int argc, char *argv[]){
             // memcpy(line_to_send_from_client + offset, client_message.data.auth.secret, secret_length);
             // line_to_send_from_client[offset + secret_length] = '\0'; // Null-terminate message contents
             // offset += secret_length + 1;
-
-
-            if (sendto(client_socket, line_to_send_from_client, strlen(input_line), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-            perror("Error: sendto failed");
-            close(client_socket);
-            exit(EXIT_FAILURE);
-        }
-
         }
 
 
