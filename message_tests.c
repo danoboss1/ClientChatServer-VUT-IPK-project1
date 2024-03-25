@@ -29,7 +29,7 @@ void test_CONFIRM(){
 
 void test_REPLY() {
     uint8_t type = 0x01;
-    uint16_t ref_message_id = 123;
+    uint16_t message_id = 200;
     uint8_t result = 1; // Assuming success
     uint16_t ref_message_id_reply = 456;
     char message_contents[] = "Sample message contents"; // Example message contents
@@ -41,7 +41,7 @@ void test_REPLY() {
 
     // Populate buffer
     buffer[0] = type;
-    memcpy(buffer + 1, &ref_message_id, sizeof(uint16_t));
+    memcpy(buffer + 1, &message_id, sizeof(uint16_t));
     buffer[3] = result;
     memcpy(buffer + 4, &ref_message_id_reply, sizeof(uint16_t));
     memcpy(buffer + 6, message_contents, message_contents_length);
@@ -63,7 +63,7 @@ void test_REPLY() {
 int main() {
     // Create a Message structure for the confirm message
     test_CONFIRM();
-    // test_REPLY();
+    test_REPLY();
     
 
 

@@ -76,6 +76,8 @@ int main(int argc, char *argv[]){
     // char *message = "Hello Server";
     char input_line[FULL_MESSAGE_BUFFER + 1];
 
+    char line_to_send_from_client[FULL_MESSAGE_BUFFER + 1];
+
     // TOTO MOZNO DAT NASPAT
     // fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
 
@@ -113,6 +115,9 @@ int main(int argc, char *argv[]){
     fds[1].fd = client_socket; // For socket
     fds[1].events = POLLIN;
 
+    Message client_message;
+    Message server_message;
+
     // puts("Neposlal som nikde nic");
     while(true){ 
         // tu bude nejaky stavovy podla zadania
@@ -120,8 +125,50 @@ int main(int argc, char *argv[]){
         // // Wait for events on multiple file descriptors
         int ret = poll(fds, 2, -1); // -1 for indefinite timeout
 
-        // TOTO JE NA CITANIE JEDNEHO RIADKU Z STANDARTNEHO VSTUPU = SPRAVA CO POSIELAM SERVERU
-        fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
+        // toto je posielanie AUTENTIFIKACIE ZATIAL IBA
+        // nieco mi prislo na standartny vstup
+        // toto je trochu zle lebo ta sprava vyzera trochu inak
+        if (fds[0].revents & POLLIN) {
+
+            // // TOTO JE NA CITANIE JEDNEHO RIADKU Z STANDARTNEHO VSTUPU = SPRAVA CO POSIELAM SERVERU
+            // fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
+
+            // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
+            // sscanf(input_line, "%s %s %s %s", m_type, username, displayname, secret
+
+            // // tato funkcia mi to rozdeli do tej struktury a ja to musim este nejako zlozit do bufferu, ktory poslem serveru
+            // Handle_message_from_server(input_line, &client_message);
+
+            // // Populate buffer
+            // line_to_send_from_client[0] = client_message.type;
+            // memcpy(line_to_send_from_client + 1, &client_message.messageID, sizeof(uint16_t));
+
+            // size_t username_length = strlen(client_message.data.auth.username);
+            // size_t display_name_length = strlen(client_message.data.auth.displayName);
+            // size_t secret_length = strlen(client_message.data.auth.secret);
+
+            // size_t offset = sizeof(uint8_t) + sizeof(uint16_t);
+
+            // memcpy(line_to_send_from_client + offset, client_message.data.auth.username, username_length);
+            // line_to_send_from_client[offset + username_length] = '\0'; // Null-terminate message contents
+            // offset += username_length + 1;
+
+            // memcpy(line_to_send_from_client + offset, client_message.data.auth.displayName, display_name_length);
+            // line_to_send_from_client[offset + display_name_length] = '\0'; // Null-terminate message contents
+            // offset += display_name_length + 1;
+
+            // memcpy(line_to_send_from_client + offset, client_message.data.auth.secret, secret_length);
+            // line_to_send_from_client[offset + secret_length] = '\0'; // Null-terminate message contents
+            // offset += secret_length + 1;
+
+
+            if (sendto(client_socket, line_to_send_from_client, strlen(input_line), 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+            perror("Error: sendto failed");
+            close(client_socket);
+            exit(EXIT_FAILURE);
+        }
+
+        }
 
 
         // if (ret < 0) {

@@ -37,7 +37,7 @@ Message receiveMessage(int sockfd, struct sockaddr_in* server_addr) {
 }
 
 
-//FUNKCIA NA HANDLOVANIE SPRAVY
+//FUNKCIA NA HANDLOVANIE SPRAVY od serveru
 size_t Handle_message_from_server(const char *buffer, Message *msg){
     memcpy(&(msg->type),buffer, sizeof(uint8_t));
     memcpy(&(msg->messageID), buffer+1, sizeof(uint16_t));
@@ -84,10 +84,10 @@ size_t Handle_message_from_server(const char *buffer, Message *msg){
             break;
         case REPLY:
             // REPLY JE DEFINOVANY NA 3 STAVY V ZADANI
-            memcpy(&(msg->data.reply.result),buffer, sizeof(uint8_t));
-            memcpy(&(msg->data.reply.ref_messageID), buffer+1, sizeof(uint16_t));
-
+            memcpy(&(msg->data.reply.result),buffer+offset, sizeof(uint8_t));
             offset += sizeof(uint8_t);
+
+            memcpy(&(msg->data.reply.ref_messageID), buffer+offset, sizeof(uint16_t));
             offset += sizeof(uint16_t);
 
             content_length = find_null_character_position(buffer + offset, MESSAGE_CONTENT_MAX_LENGTH) + 1;
