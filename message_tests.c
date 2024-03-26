@@ -247,19 +247,6 @@ int main() {
     test_MSG();
     test_ERR();
     test_BYE();
-    
-
 
     return 0;
 }
-
-// // Write your test cases here...
-// void test_Handle_message_from_server() {
-//     // Define your test cases and assertions here...
-// }
-
-// int main() {
-//     // Run your tests here...
-//     test_Handle_message_from_server();
-//     return 0;
-// }
