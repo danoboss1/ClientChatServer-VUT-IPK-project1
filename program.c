@@ -58,6 +58,10 @@ int main(int argc, char *argv[]){
 
     char line_to_send_from_client[FULL_MESSAGE_BUFFER + 1];
 
+    char received_message[FULL_MESSAGE_BUFFER + 1];
+
+    State current_state = START_STATE;
+
     struct sockaddr_in servaddr;
 
     // Clear servaddr
@@ -148,6 +152,15 @@ int main(int argc, char *argv[]){
                 exit(EXIT_FAILURE);
                 }
 
+                // toto niekde dat aby to fungovalo
+                // if (current_state == START_STATE) {
+                //     // auth -> state = AUTH_STATE
+                //     // error
+                // } else if (current_state == AUTH_STATE) {
+
+                // }
+
+
                 msg_id++;
             } else if (strncmp(input_line, JOIN_COMMAND_TO_CHECK, strlen(JOIN_COMMAND_TO_CHECK)) == 0) {
                 uint8_t type = 0x03;
@@ -220,10 +233,19 @@ int main(int argc, char *argv[]){
         //     // ...
         // }
 
+        puts("dostanem sa pred reciveMessage funkciu");
 
-        // toto je na receiveMessage funkciu
-        Message receivedMsg;
-        receivedMsg = receiveMessage(client_socket, &servaddr);
+        // toto je na receiveMessage funkciu, TOTO BUDEM ISTO ODKOMENTOVAVAT
+        //Message receivedMsg;
+        //receivedMsg = receiveMessage(client_socket, &servaddr);
+
+
+        //socklen_t len = sizeof(*servaddr);
+        // Receive message
+        recvfrom(client_socket, &received_message, 1501, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) < 0);
+
+        puts("dostanem sa pred reciveMessage funkciu");
+        printf("%s", received_message);
     }
 
 

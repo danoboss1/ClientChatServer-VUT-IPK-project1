@@ -6,6 +6,14 @@
 
 #define FULL_MESSAGE_BUFFER 1500
 
+//FINITE STATE MACHINE 
+typedef enum {
+    START_STATE,
+    AUTH_STATE,
+    OPEN_STATE,
+    ERROR_STATE,
+    END_STATE
+} State;
 
 // Define message types
 // uvidim ci toto tu necham
