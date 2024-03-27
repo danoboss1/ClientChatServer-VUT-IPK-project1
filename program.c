@@ -114,55 +114,73 @@ int main(int argc, char *argv[]){
             // TOTO JE NA CITANIE JEDNEHO RIADKU Z STANDARTNEHO VSTUPU = SPRAVA CO POSIELAM SERVERU
             fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
 
-            if (strncmp(input_line, AUTH_COMMAND_TO_CHECK, strlen(AUTH_COMMAND_TO_CHECK)) == 0) {
-                uint8_t type = 0x02;
-                char delete_auth_zaciatok[5] = "";
-                char username[USERNAME_MAX_LENGTH + 1] = "";
-                char display_name[DISPLAY_NAME_MAX_LENGTH + 1] = "";
-                char secret[SECRET_MAX_LENGHT + 1] = "";
+            // co mozem urobit v start state inak to pojde do error statu
+            // TIETO VECI DAT MOZNO DO FUNKCII A POTOM ICH POUZIVAT V
+            if (current_state == START_STATE){
 
-                // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
-                sscanf(input_line, "%s %s %s %s", delete_auth_zaciatok, username, display_name, secret);
+                // TOTO MUSI NASTAVIT LOKALNE DISPLAY_NAME, KTORY BUDE MOZNO MENIT
+                if (strncmp(input_line, AUTH_COMMAND_TO_CHECK, strlen(AUTH_COMMAND_TO_CHECK)) == 0) {
+                    uint8_t type = 0x02;
+                    char delete_auth_zaciatok[5] = "";
+                    char username[USERNAME_MAX_LENGTH + 1] = "";
+                    char display_name[DISPLAY_NAME_MAX_LENGTH + 1] = "";
+                    char secret[SECRET_MAX_LENGHT + 1] = "";
 
-                size_t username_length = strlen(username);
-                size_t display_name_length = strlen(display_name);
-                // printf("%ld", display_name_length);
-                size_t secret_length = strlen(secret);
+                    // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
+                    sscanf(input_line, "%s %s %s %s", delete_auth_zaciatok, username, display_name, secret);
 
-                // 3 je pocet terminalnych nul, to asi dat neskor do nejakej premennej
-                size_t message_size = sizeof(uint8_t) + sizeof(uint16_t) + username_length + display_name_length + secret_length + 3;  
+                    size_t username_length = strlen(username);
+                    size_t display_name_length = strlen(display_name);
+                    // printf("%ld", display_name_length);
+                    size_t secret_length = strlen(secret);
 
-                // Populate buffer
-                uint8_t *ptr = (uint8_t *)line_to_send_from_client;
-                *ptr++ = type;
-                memcpy(ptr, &msg_id, sizeof(uint16_t));
-                ptr += sizeof(uint16_t);
-                strcpy(ptr, username);
-                ptr += username_length + 1;
-                strcpy(ptr, display_name);
-                ptr += display_name_length + 1;
-                strcpy(ptr, secret);
+                    // 3 je pocet terminalnych nul, to asi dat neskor do nejakej premennej
+                    size_t message_size = sizeof(uint8_t) + sizeof(uint16_t) + username_length + display_name_length + secret_length + 3;  
 
-                //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
+                    // Populate buffer
+                    uint8_t *ptr = (uint8_t *)line_to_send_from_client;
+                    *ptr++ = type;
+                    memcpy(ptr, &msg_id, sizeof(uint16_t));
+                    ptr += sizeof(uint16_t);
+                    strcpy(ptr, username);
+                    ptr += username_length + 1;
+                    strcpy(ptr, display_name);
+                    ptr += display_name_length + 1;
+                    strcpy(ptr, secret);
 
-                // treti parameter je dlzka co posielam
-                if (sendto(client_socket, line_to_send_from_client, message_size, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-                perror("Error: sendto failed");
-                close(client_socket);
-                exit(EXIT_FAILURE);
+                    //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
+
+                    // treti parameter je dlzka co posielam
+                    if (sendto(client_socket, line_to_send_from_client, message_size, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+                    perror("Error: sendto failed");
+                    close(client_socket);
+                    exit(EXIT_FAILURE);
+                    }
+
+                    // toto niekde dat aby to fungovalo
+                    // if (current_state == START_STATE) {
+                    //     // auth -> state = AUTH_STATE
+                    //     // error
+                    // } else if (current_state == AUTH_STATE) {
+
+                    // }
+
+
+                    msg_id++;
+                    current_state = OPEN_STATE;
+                // to do
+                } else {
+                    current_state = ERROR_STATE;
                 }
+            }
 
-                // toto niekde dat aby to fungovalo
-                // if (current_state == START_STATE) {
-                //     // auth -> state = AUTH_STATE
-                //     // error
-                // } else if (current_state == AUTH_STATE) {
-
-                // }
+            if(current_state == ERROR_STATE){
+                printf("Som v error state \n");
+                printf("sem doplnit logiku error statu \n");
+            }
 
 
-                msg_id++;
-            } else if (strncmp(input_line, JOIN_COMMAND_TO_CHECK, strlen(JOIN_COMMAND_TO_CHECK)) == 0) {
+            if (strncmp(input_line, JOIN_COMMAND_TO_CHECK, strlen(JOIN_COMMAND_TO_CHECK)) == 0) {
                 uint8_t type = 0x03;
                 char delete_join_zaciatok[5] = "";
                 char channelID[CHANNEL_ID_MAX_LENGTH + 1] = "";
@@ -199,13 +217,18 @@ int main(int argc, char *argv[]){
             } else if (strncmp(input_line, RENAME_COMMAND_TO_CHECK, strlen(RENAME_COMMAND_TO_CHECK)) == 0) {
                 puts("Locally changes the display name of the user to be sent with new messages/selected commands");
             } else if (strncmp(input_line, HELP_COMMAND_TO_CHECK, strlen(HELP_COMMAND_TO_CHECK)) == 0) {
-                puts("Prints out supported local commands with their parameters and a description");
-            }       
-            else {
-                // TOTO NEJAKO PREMENIT NA FINITE STATE MACHINE 
-                // NECHAPEM PRECO TENTO ELSE NEJDE 
-                printf("not recognize command!");
-            }
+                printf("Commands:\n");
+                printf("  /auth\n");
+                printf("  PARAMETERS: {Username} {Secret} {DisplayName}\n");
+                printf("  DESCRIPTION: add Description");
+                printf("  ...");
+            } 
+            // TOTO BOL ELSE IBA KED SOM MAL VSETKY COMMANDY V JEDNOM IF-ELSE      
+            // else {
+            //     // TOTO NEJAKO PREMENIT NA FINITE STATE MACHINE 
+            //     // NECHAPEM PRECO TENTO ELSE NEJDE 
+            //     printf("not recognize command!");
+            // }
         }
 
 
@@ -233,7 +256,7 @@ int main(int argc, char *argv[]){
         //     // ...
         // }
 
-        puts("dostanem sa pred reciveMessage funkciu");
+        puts("dostanem sa pred reciveMessage funkciu \n");
 
         // toto je na receiveMessage funkciu, TOTO BUDEM ISTO ODKOMENTOVAVAT
         //Message receivedMsg;
@@ -242,9 +265,13 @@ int main(int argc, char *argv[]){
 
         //socklen_t len = sizeof(*servaddr);
         // Receive message
-        recvfrom(client_socket, &received_message, 1501, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) < 0);
+        if (current_state == OPEN_STATE){
+            recvfrom(client_socket, &received_message, 1501, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) < 0);
+        } else {
+            puts("Nie som v open state");
+        }
 
-        puts("dostanem sa pred reciveMessage funkciu");
+        puts("dostanem sa pred reciveMessage funkciu \n");
         printf("%s", received_message);
     }
 
