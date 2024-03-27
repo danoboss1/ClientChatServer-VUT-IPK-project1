@@ -5,13 +5,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <poll.h>
+#include <getopt.h>
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+// client je udp
 #include "client.h"
-
-uint16_t msg_id = 1;
 
 //TODO: IFDEF PRI HEADER SUBOROCH
 
@@ -52,234 +52,71 @@ void process_arguments(int argc, char *argv[]){
 int main(int argc, char *argv[]){
 
     // FUNKCIA NA HANDLOVANIE ARGUMENTOV PRI SPUSTENI PROGRAMU
-    process_arguments(argc, argv);
+    // process_arguments(argc, argv);
 
-    char input_line[FULL_MESSAGE_BUFFER + 1];
+    int opt;
+    bool is_protocol;
+    bool is_ip_adress;
 
-    char line_to_send_from_client[FULL_MESSAGE_BUFFER + 1];
-
-    char received_message[FULL_MESSAGE_BUFFER + 1];
-
-    State current_state = START_STATE;
-
-    struct sockaddr_in servaddr;
-
-    // Clear servaddr
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(PORT);
-    servaddr.sin_family = AF_INET;
-
-    // Create datagram socket
-    int family = AF_INET;
-    int type = SOCK_DGRAM;
-    int client_socket = socket(family, type, 0);
-    if (client_socket <= 0) 
-        {
-        perror("ERROR: socket");
-        exit(EXIT_FAILURE);
-        }
+    char *protocol = NULL;
+    char *server_address = NULL;
+    uint16_t server_port = 0; 
+    uint16_t udp_timeout = 0; 
+    uint8_t max_retransmissions = 0;
     
-    //bindovanie serveru na mna
-    struct sockaddr_in bind_addr;
-    memset(&bind_addr, 0, sizeof(struct sockaddr_in));
-    bind_addr.sin_family = AF_INET;
-    bind_addr.sin_port = htons(PORT + 1);
-    bind(client_socket, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in));
-
-    // Define pollfd structures
-    struct pollfd fds[2];
-    fds[0].fd = STDIN_FILENO; // For stdin
-    fds[0].events = POLLIN;
-    fds[1].fd = client_socket; // For socket
-    fds[1].events = POLLIN;
-
-    Message client_message;
-    Message server_message;
-
-    while(true){ 
-        // tu bude nejaky stavovy podla zadania
-
-        // // Wait for events on multiple file descriptors
-        int ret = poll(fds, 2, -1); // -1 for indefinite timeout
-
-        // nieco mi prislo na standartny vstup
-        if (fds[0].revents & POLLIN) {
-
-            char *AUTH_COMMAND_TO_CHECK = "/auth";
-            char *JOIN_COMMAND_TO_CHECK = "/join";
-            char *RENAME_COMMAND_TO_CHECK = "/rename";
-            char *HELP_COMMAND_TO_CHECK = "/help";
-
-            // TOTO JE NA CITANIE JEDNEHO RIADKU Z STANDARTNEHO VSTUPU = SPRAVA CO POSIELAM SERVERU
-            fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
-
-            // co mozem urobit v start state inak to pojde do error statu
-            // TIETO VECI DAT MOZNO DO FUNKCII A POTOM ICH POUZIVAT V
-            if (current_state == START_STATE){
-
-                // TOTO MUSI NASTAVIT LOKALNE DISPLAY_NAME, KTORY BUDE MOZNO MENIT
-                if (strncmp(input_line, AUTH_COMMAND_TO_CHECK, strlen(AUTH_COMMAND_TO_CHECK)) == 0) {
-                    uint8_t type = 0x02;
-                    char delete_auth_zaciatok[5] = "";
-                    char username[USERNAME_MAX_LENGTH + 1] = "";
-                    char display_name[DISPLAY_NAME_MAX_LENGTH + 1] = "";
-                    char secret[SECRET_MAX_LENGHT + 1] = "";
-
-                    // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
-                    sscanf(input_line, "%s %s %s %s", delete_auth_zaciatok, username, display_name, secret);
-
-                    size_t username_length = strlen(username);
-                    size_t display_name_length = strlen(display_name);
-                    // printf("%ld", display_name_length);
-                    size_t secret_length = strlen(secret);
-
-                    // 3 je pocet terminalnych nul, to asi dat neskor do nejakej premennej
-                    size_t message_size = sizeof(uint8_t) + sizeof(uint16_t) + username_length + display_name_length + secret_length + 3;  
-
-                    // Populate buffer
-                    uint8_t *ptr = (uint8_t *)line_to_send_from_client;
-                    *ptr++ = type;
-                    memcpy(ptr, &msg_id, sizeof(uint16_t));
-                    ptr += sizeof(uint16_t);
-                    strcpy(ptr, username);
-                    ptr += username_length + 1;
-                    strcpy(ptr, display_name);
-                    ptr += display_name_length + 1;
-                    strcpy(ptr, secret);
-
-                    //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
-
-                    // treti parameter je dlzka co posielam
-                    if (sendto(client_socket, line_to_send_from_client, message_size, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-                    perror("Error: sendto failed");
-                    close(client_socket);
-                    exit(EXIT_FAILURE);
-                    }
-
-                    // toto niekde dat aby to fungovalo
-                    // if (current_state == START_STATE) {
-                    //     // auth -> state = AUTH_STATE
-                    //     // error
-                    // } else if (current_state == AUTH_STATE) {
-
-                    // }
-
-
-                    msg_id++;
-                    current_state = OPEN_STATE;
-                // to do
+    while((opt = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
+    {
+        switch(opt)
+        {
+            case 't':
+                if (strcmp(optarg, "udp") == 0 || (strcmp(optarg, "tcp")) == 0){
+                    protocol = optarg;
+                    is_protocol = true;
                 } else {
-                    current_state = ERROR_STATE;
+                    return 0;
                 }
-            }
-
-            if(current_state == ERROR_STATE){
-                printf("Som v error state \n");
-                printf("sem doplnit logiku error statu \n");
-            }
-
-
-            if (strncmp(input_line, JOIN_COMMAND_TO_CHECK, strlen(JOIN_COMMAND_TO_CHECK)) == 0) {
-                uint8_t type = 0x03;
-                char delete_join_zaciatok[5] = "";
-                char channelID[CHANNEL_ID_MAX_LENGTH + 1] = "";
-                char display_name[DISPLAY_NAME_MAX_LENGTH + 1] = "";
-
-                // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
-                sscanf(input_line, "%s %s %s", delete_join_zaciatok, channelID, display_name);
-
-                size_t channelID_length = strlen(channelID);
-                size_t display_name_length = strlen(display_name);
-
-                // 2 je pocet terminalnych nul, to asi data neskor do nejakej premennej
-                size_t message_size = sizeof(uint8_t) + sizeof(uint16_t) + channelID_length + display_name_length + 2;  
-
-                // Populate buffer
-                uint8_t *ptr = (uint8_t *)line_to_send_from_client;
-                *ptr++ = type;
-                memcpy(ptr, &msg_id, sizeof(uint16_t));
-                ptr += sizeof(uint16_t);
-                strcpy(ptr, channelID);
-                ptr += channelID_length + 1;
-                strcpy(ptr, display_name);
-
-                //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
-
-                if (sendto(client_socket, line_to_send_from_client, message_size, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-                perror("Error: sendto failed");
-                close(client_socket);
-                exit(EXIT_FAILURE);
-                }
-
-                msg_id++;
-
-            } else if (strncmp(input_line, RENAME_COMMAND_TO_CHECK, strlen(RENAME_COMMAND_TO_CHECK)) == 0) {
-                puts("Locally changes the display name of the user to be sent with new messages/selected commands");
-            } else if (strncmp(input_line, HELP_COMMAND_TO_CHECK, strlen(HELP_COMMAND_TO_CHECK)) == 0) {
-                printf("Commands:\n");
-                printf("  /auth\n");
-                printf("  PARAMETERS: {Username} {Secret} {DisplayName}\n");
-                printf("  DESCRIPTION: add Description");
-                printf("  ...");
-            } 
-            // TOTO BOL ELSE IBA KED SOM MAL VSETKY COMMANDY V JEDNOM IF-ELSE      
-            // else {
-            //     // TOTO NEJAKO PREMENIT NA FINITE STATE MACHINE 
-            //     // NECHAPEM PRECO TENTO ELSE NEJDE 
-            //     printf("not recognize command!");
-            // }
+            case 's':
+                server_address = optarg;
+                is_ip_adress = true;
+            case 'p':
+                // Parse the server port value provided by the user
+                server_port = atoi(optarg);
+            case 'd':
+                // Parse the UDP confirmation timeout value provided by the user
+                udp_timeout = atoi(optarg);
+            case 'r':
+                max_retransmissions = atoi(optarg);
+            case 'h':
+                // Print program help output and exit
+                printf("Program Help Output:\n");
+                printf("-t: Transport protocol used for connection (tcp or udp)\n");
+                printf("-s: Server IP or hostname\n");
+                printf("-p: Server port (uint16)\n");
+                printf("-d: UDP confirmation timeout (uint16)\n");
+                printf("-r: Maximum number of UDP retransmissions (uint8)\n");
+                printf("-h: Prints program help output and exits\n");         
         }
+    }
 
-
-        // if (ret < 0) {
-        //     perror("Poll error");
-        //     exit(EXIT_FAILURE);
-        // }
-
-        // TU SPRACOVAVAM MOJE, KLIENTOVE SPRAVY/COMMANDY
-        // // Check for events
-        // if (fds[0].revents & POLLIN) {
-        //     // Message from stdin
-        //     char buffer[MAXLINE];
-        //     fgets(buffer, MAXLINE, stdin);
-        //     // Process and send message
-        //     // ...
-        // }
-
-        // TU SPRACOVAVAM SPRAVY OD SERVERU
-        // if (fds[1].revents & POLLIN) {
-        //     // Message from server
-        //     struct Message msg;
-        //     recvfrom(sockfd, &msg, sizeof(msg), 0, NULL, NULL);
-        //     // Process received message
-        //     // ...
-        // }
-
-        puts("dostanem sa pred reciveMessage funkciu \n");
-
-        // toto je na receiveMessage funkciu, TOTO BUDEM ISTO ODKOMENTOVAVAT
-        //Message receivedMsg;
-        //receivedMsg = receiveMessage(client_socket, &servaddr);
-
-
-        //socklen_t len = sizeof(*servaddr);
-        // Receive message
-        if (current_state == OPEN_STATE){
-            recvfrom(client_socket, &received_message, 1501, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) < 0);
-        } else {
-            puts("Nie som v open state");
-        }
-
-        puts("dostanem sa pred reciveMessage funkciu \n");
-        printf("%s", received_message);
+    if (is_protocol == false || is_ip_adress == false){
+        return 0;
     }
 
 
-    // // Print the received response
-    // printf("Server response: %s\n", buffer);
+    // struct hostent *server = gethostbyname(ip_add);
+    // if (server == NULL){
+    //     fprintf(stderr, "ERROR: no such host %s\n", ip_add);
+    //     exit(EXIT_FAILURE);
+    // }
 
-    // // Close the socket
-    // close(client_socket);
-    // return 0;
+    // struct sockaddr_in servaddr;
+    // memset(&servaddr, 0, sizeof(servaddr));
+
+    // servaddr.sin_family = AF_INET;
+    // servaddr.sin_port = htons(server_port);
+    // memcpy(&servaddr.sin_addr.s_addr, server->h_addr, (size_t)server->h_length);
+
+    udp_main();
+
+
 }
