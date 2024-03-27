@@ -9,4 +9,4 @@ Message receiveMessage(int sockfd, struct sockaddr_in* server_addr);
 
 size_t Handle_message_from_server(const char *buffer, Message *msg);
 
-void udp_main();
+void udp_main(struct sockaddr_in servaddr, int server_port);

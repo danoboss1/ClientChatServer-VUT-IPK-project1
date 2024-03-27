@@ -104,7 +104,7 @@ size_t Handle_message_from_server(const char *buffer, Message *msg){
 
 }
 
-void udp_main(){
+void udp_main(struct sockaddr_in servaddr, int server_port){
     char input_line[FULL_MESSAGE_BUFFER + 1];
 
     char line_to_send_from_client[FULL_MESSAGE_BUFFER + 1];
@@ -112,14 +112,6 @@ void udp_main(){
     char received_message[FULL_MESSAGE_BUFFER + 1];
 
     State current_state = START_STATE;
-
-    struct sockaddr_in servaddr;
-
-    // Clear servaddr
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(PORT);
-    servaddr.sin_family = AF_INET;
 
     // Create datagram socket
     int family = AF_INET;

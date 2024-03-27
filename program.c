@@ -9,9 +9,11 @@
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 // client je udp
 #include "client.h"
+#include "tcp.h"
 
 //TODO: IFDEF PRI HEADER SUBOROCH
 
@@ -57,6 +59,7 @@ int main(int argc, char *argv[]){
     int opt;
     bool is_protocol;
     bool is_ip_adress;
+    bool entered_server_port = false;
 
     char *protocol = NULL;
     char *server_address = NULL;
@@ -75,17 +78,23 @@ int main(int argc, char *argv[]){
                 } else {
                     return 0;
                 }
+                break;
             case 's':
                 server_address = optarg;
                 is_ip_adress = true;
+                break;
             case 'p':
                 // Parse the server port value provided by the user
                 server_port = atoi(optarg);
+                entered_server_port = true;
+                break;
             case 'd':
                 // Parse the UDP confirmation timeout value provided by the user
                 udp_timeout = atoi(optarg);
+                break;
             case 'r':
                 max_retransmissions = atoi(optarg);
+                break;
             case 'h':
                 // Print program help output and exit
                 printf("Program Help Output:\n");
@@ -94,7 +103,8 @@ int main(int argc, char *argv[]){
                 printf("-p: Server port (uint16)\n");
                 printf("-d: UDP confirmation timeout (uint16)\n");
                 printf("-r: Maximum number of UDP retransmissions (uint8)\n");
-                printf("-h: Prints program help output and exits\n");         
+                printf("-h: Prints program help output and exits\n"); 
+                break;        
         }
     }
 
@@ -102,21 +112,28 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-
-    // struct hostent *server = gethostbyname(ip_add);
-    // if (server == NULL){
-    //     fprintf(stderr, "ERROR: no such host %s\n", ip_add);
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // struct sockaddr_in servaddr;
-    // memset(&servaddr, 0, sizeof(servaddr));
-
-    // servaddr.sin_family = AF_INET;
-    // servaddr.sin_port = htons(server_port);
-    // memcpy(&servaddr.sin_addr.s_addr, server->h_addr, (size_t)server->h_length);
-
-    udp_main();
+    if (entered_server_port == false) {
+        server_port = 4567;
+    }
 
 
+    struct hostent *server = gethostbyname(server_address);
+    if (server == NULL){
+        fprintf(stderr, "ERROR: no such host %s\n", server_address);
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_in servaddr;
+    memset(&servaddr, 0, sizeof(servaddr));
+
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(server_port);
+    memcpy(&servaddr.sin_addr.s_addr, server->h_addr_list[0], (size_t)server->h_length);
+
+    // tuto budem rozlisovat tcp alebo udp podla parametru zadaneho z terminalu
+    if (strcmp(protocol, "udp") == 0) {
+        udp_main(servaddr, server_port);
+    } else if (strcmp(protocol, "tcp") == 0) {
+        tcp_main(servaddr, server_port);
+    }
 }
