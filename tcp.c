@@ -16,7 +16,6 @@
 #include <signal.h>
 
 #include "tcp.h"
-#include "message_structure.h"
 
 char display_name[DISPLAY_NAME_MAX_LENGTH + 1] = "";
 

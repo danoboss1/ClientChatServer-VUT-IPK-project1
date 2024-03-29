@@ -14,6 +14,8 @@
 // client je udp
 #include "client.h"
 #include "tcp.h"
+// #include "message_structure.h"
+
 
 //TODO: IFDEF PRI HEADER SUBOROCH
 

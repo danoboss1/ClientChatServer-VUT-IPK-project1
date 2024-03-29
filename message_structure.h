@@ -1,3 +1,8 @@
+#ifndef MESSAGE_STRUCTURE_H
+#define MESSAGE_STRUCTURE_H
+
+#include <stdint.h>
+
 #define DISPLAY_NAME_MAX_LENGTH 20
 #define CHANNEL_ID_MAX_LENGTH 20
 #define USERNAME_MAX_LENGTH 20  
@@ -75,3 +80,5 @@ typedef struct {
 #define MSG     0x04
 #define ERR     0xFE
 #define BYE     0xFF
+
+#endif
