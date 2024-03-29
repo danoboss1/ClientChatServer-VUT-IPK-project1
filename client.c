@@ -170,7 +170,7 @@ void udp_main(struct sockaddr_in servaddr, int server_port){
                     char secret[SECRET_MAX_LENGHT + 1] = "";
 
                     // tato FUNKCIA MI TO ROZDELI DO PREMENNYCH
-                    sscanf(input_line, "%s %s %s %s", delete_auth_zaciatok, username, display_name, secret);
+                    sscanf(input_line, "%s %s %s %s", delete_auth_zaciatok, username, secret, display_name);
 
                     size_t username_length = strlen(username);
                     size_t display_name_length = strlen(display_name);
