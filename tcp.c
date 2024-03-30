@@ -135,6 +135,24 @@ void user_BYE(char *line_to_send_from_client, int sockfd){
         }
 }
 
+void ERROR_from_user_to_server(char *line_to_send_from_client, int sockfd){
+        size_t message_size;
+        ssize_t bytes_sent;
+
+        sprintf(line_to_send_from_client, "ERR FROM %s IS Unexpected message in this state\r\n", display_name);
+
+        message_size  = strlen(line_to_send_from_client);
+
+        bytes_sent = write(sockfd, line_to_send_from_client, message_size);
+        if (bytes_sent < 0) {
+            perror("ERROR: sending message");
+            exit(EXIT_FAILURE);
+        }
+
+        //ERR FROM {DisplayName} IS {MessageContent}\r\n
+        //sprintf(line_to_send_from_client, "JOIN %s AS %s\r\n", channelID, display_name);
+}
+
 void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int sockfd){
     size_t message_size;
     ssize_t bytes_sent;
