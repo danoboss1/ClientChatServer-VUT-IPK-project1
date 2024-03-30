@@ -7,6 +7,9 @@
 #include <poll.h>
 #include <getopt.h>
 
+#include <errno.h>
+#include <limits.h>
+
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -68,6 +71,9 @@ int main(int argc, char *argv[]){
     uint16_t server_port = 0; 
     uint16_t udp_timeout = 0; 
     uint8_t max_retransmissions = 0;
+
+    unsigned long ul;
+    char *endptr;
     
     while((opt = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
     {
@@ -87,15 +93,82 @@ int main(int argc, char *argv[]){
                 break;
             case 'p':
                 // Parse the server port value provided by the user
-                server_port = atoi(optarg);
+                ul = strtoul(optarg, &endptr, 10);
+
+                    // Check for errors during conversion
+                if ((errno == ERANGE && (ul == ULONG_MAX || ul == 0)) || (errno != 0 && ul == 0)) {
+                    perror("strtoul");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Check if there are any non-numeric characters in the string
+                if (endptr == optarg) {
+                    fprintf(stderr, "No digits were found\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Check if the value fits within the range of uint16_t
+                if (ul > UINT16_MAX) {
+                    fprintf(stderr, "Value out of range of uint16_t\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Convert to uint16_t
+                server_port = (uint16_t)ul;
+
+                // server_port = atoi(optarg);
                 entered_server_port = true;
                 break;
             case 'd':
                 // Parse the UDP confirmation timeout value provided by the user
-                udp_timeout = atoi(optarg);
+                ul = strtoul(optarg, &endptr, 10);
+
+                // Check for errors during conversion
+                if ((errno == ERANGE && (ul == ULONG_MAX || ul == 0)) || (errno != 0 && ul == 0)) {
+                    perror("strtoul");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Check if there are any non-numeric characters in the string
+                if (endptr == optarg) {
+                    fprintf(stderr, "No digits were found\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Check if the value fits within the range of uint16_t
+                if (ul > UINT16_MAX) {
+                    fprintf(stderr, "Value out of range of uint16_t\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Convert to uint16_t
+                udp_timeout = (uint16_t)ul;
+                // udp_timeout = atoi(optarg);
                 break;
             case 'r':
-                max_retransmissions = atoi(optarg);
+                ul = strtoul(optarg, &endptr, 10); // Base 10 conversion
+
+                // Check for errors during conversion
+                if ((errno == ERANGE && (ul == ULONG_MAX || ul == 0)) || (errno != 0 && ul == 0)) {
+                    perror("strtoul");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Check if there are any non-numeric characters in the string
+                if (endptr == optarg) {
+                    fprintf(stderr, "No digits were found\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Check if the value fits within the range of uint8_t
+                if (ul > UINT8_MAX) {
+                    fprintf(stderr, "Value out of range of uint8_t\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Convert to uint8_t
+                max_retransmissions = (uint8_t)ul;
+                // max_retransmissions = atoi(optarg);
                 break;
             case 'h':
                 // Print program help output and exit

@@ -42,7 +42,7 @@ Message receiveMessage(int sockfd, struct sockaddr_in* server_addr) {
 
 
 //FUNKCIA NA HANDLOVANIE SPRAVY od serveru
-size_t Handle_message_from_server(const char *buffer, Message *msg){
+void Handle_message_from_server(const char *buffer, Message *msg){
     memcpy(&(msg->type),buffer, sizeof(uint8_t));
     memcpy(&(msg->messageID), buffer+1, sizeof(uint16_t));
 
@@ -137,14 +137,18 @@ void udp_main(struct sockaddr_in servaddr, int server_port){
     fds[1].fd = client_socket; // For socket
     fds[1].events = POLLIN;
 
-    Message client_message;
-    Message server_message;
+    // Message client_message;
+    // Message server_message;
 
     while(true){ 
         // tu bude nejaky stavovy podla zadania
 
         // // Wait for events on multiple file descriptors
         int ret = poll(fds, 2, -1); // -1 for indefinite timeout
+        if (ret == -1) {
+            perror("ERROR: poll");
+            exit(EXIT_FAILURE);
+        }
 
         // nieco mi prislo na standartny vstup
         if (fds[0].revents & POLLIN) {
@@ -185,11 +189,11 @@ void udp_main(struct sockaddr_in servaddr, int server_port){
                     *ptr++ = type;
                     memcpy(ptr, &msg_id, sizeof(uint16_t));
                     ptr += sizeof(uint16_t);
-                    strcpy(ptr, username);
+                    strcpy((char *)ptr, username);
                     ptr += username_length + 1;
-                    strcpy(ptr, display_name);
+                    strcpy((char *)ptr, display_name);
                     ptr += display_name_length + 1;
-                    strcpy(ptr, secret);
+                    strcpy((char *)ptr, secret);
 
                     //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
 
@@ -243,9 +247,9 @@ void udp_main(struct sockaddr_in servaddr, int server_port){
                 *ptr++ = type;
                 memcpy(ptr, &msg_id, sizeof(uint16_t));
                 ptr += sizeof(uint16_t);
-                strcpy(ptr, channelID);
+                strcpy((char *)ptr, channelID);
                 ptr += channelID_length + 1;
-                strcpy(ptr, display_name);
+                strcpy((char *)ptr, display_name);
 
                 //poslal som to co bolo aj na klavesnici plus nejake bajty navyse
 

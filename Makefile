@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-CFLAGS := -g #-Wall -Wextra -pedantic -Wconversion -Wno-unused-parameter
+CFLAGS := -g -Wall -Wextra -pedantic -Wconversion -Wno-unused-parameter
 PROG_OBJS := program.o client.o tcp.o
 TESTS_OBJS := client.o message_tests.o
 

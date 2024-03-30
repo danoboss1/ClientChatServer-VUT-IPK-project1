@@ -235,8 +235,8 @@ MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_clie
         // write a read
         // vlozim do prazdneho bufferu spravu a zistim aky velky je ten buffer
 
-        return checked_msg;
     }
+    return checked_msg;
 }
 
 
@@ -282,6 +282,10 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
 
         // // Wait for events on multiple file descriptors
         int ret = poll(fds, 2, -1); // -1 for indefinite timeout
+        if (ret == -1) {
+            perror("ERROR: poll");
+            exit(EXIT_FAILURE);
+        }
 
         // tuto budem este informovat uzivatela ked zada zly vstup
         if (fds[0].revents & POLLIN) {
