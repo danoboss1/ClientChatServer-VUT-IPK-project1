@@ -104,7 +104,7 @@ void Handle_message_from_server(const char *buffer, Message *msg){
 
 }
 
-void udp_main(struct sockaddr_in servaddr, int server_port){
+void udp_main(struct sockaddr_in servaddr, int server_port, int udp_main, int max_retransmissions){
     char input_line[FULL_MESSAGE_BUFFER + 1];
 
     char line_to_send_from_client[FULL_MESSAGE_BUFFER + 1];

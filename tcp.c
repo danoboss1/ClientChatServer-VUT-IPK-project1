@@ -215,6 +215,9 @@ MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_clie
 
         checked_msg = MESSAGE_TYPE_NONE;
     } else {
+        size_t input_line_length = strlen(input_line);
+        input_line[input_line_length - 1] = '\0';
+
         sprintf(line_to_send_from_client, "MSG FROM %s IS %s\r\n", display_name, input_line);
 
         going_to_send_message = true;
@@ -319,7 +322,10 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                     current_state = START_STATE;
                 } else if (msg_type == MESSAGE_TYPE_NONE) {
                     current_state = START_STATE;
-                } 
+                } else {
+                    fprintf(stderr, "ERR: Not supported command or message, use /help command\n");
+                    current_state = START_STATE;
+                }
                 // tu bude mozno nejaky error pri inych typoch
             } else if (current_state == AUTH_STATE){
                 if (msg_type == MESSAGE_TYPE_BYE) {
@@ -333,6 +339,9 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                     current_state = AUTH_STATE;
                 } else if (msg_type == MESSAGE_TYPE_NONE) {
                     current_state = AUTH_STATE;
+                } else {
+                    fprintf(stderr, "ERR: Not supported command or message, use /help command\n");
+                    current_state = AUTH_STATE; 
                 }
                 // tu bude mozno nejaky error pri inych typoch
             } else if (current_state == OPEN_STATE){
@@ -342,6 +351,9 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                     current_state = OPEN_STATE;
                 } else if (msg_type == MESSAGE_TYPE_NONE) {
                     current_state = OPEN_STATE;
+                } else {
+                    fprintf(stderr, "ERR: Not supported command or message, use /help command\n");
+                    current_state = OPEN_STATE; 
                 }
             }
 
@@ -356,49 +368,49 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
         
     // /r/n bude v tom bufferi, ktory posielam aj v bufferi ktory prijimam
     
-        // // toto je testovaci if
-        // printf("sucasny stav %d\n", current_state);
-        // if (current_state == AUTH_STATE){
-        //     char test_reply_ok[FULL_MESSAGE_BUFFER + 1] = "REPLY OK IS SKUSKA 1 2 3 IDE";
-        //     msg_type = Handle_server_messages_tcp(test_reply_ok);
-        //     printf("sucasny typ spravy %d\n", msg_type); 
+        // toto je testovaci if
+        printf("sucasny stav %d\n", current_state);
+        if (current_state == AUTH_STATE){
+            char test_reply_ok[FULL_MESSAGE_BUFFER + 1] = "REPLY OK IS SKUSKA 1 2 3 IDE";
+            msg_type = Handle_server_messages_tcp(test_reply_ok);
+            printf("sucasny typ spravy %d\n", msg_type); 
 
-        //     if (current_state == AUTH_STATE){
-        //         if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
-        //             current_state = AUTH_STATE;
-        //         } else if (msg_type == MESSAGE_TYPE_REPLY) {
-        //             current_state = OPEN_STATE;
-        //         } else if (msg_type == MESSAGE_TYPE_ERR) {
-        //             user_BYE(line_to_send_from_client, sockfd);
-        //             current_state = END_STATE;
-        //         } else {
-        //             ERROR_from_user_to_server(line_to_send_from_client, sockfd);
-        //             current_state = ERROR_STATE;
-        //             user_BYE(line_to_send_from_client, sockfd);
-        //             current_state = END_STATE;
-        //         }
-        //     } else if (current_state == OPEN_STATE) {
-        //         if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
-        //             current_state = OPEN_STATE;
-        //         } else if (msg_type == MESSAGE_TYPE_REPLY) {
-        //             current_state = OPEN_STATE;
-        //         } else if (msg_type == MESSAGE_TYPE_MSG) {
-        //             current_state = OPEN_STATE;
-        //         } else if (msg_type == MESSAGE_TYPE_ERR) {
-        //             user_BYE(line_to_send_from_client, sockfd);
-        //             current_state = END_STATE;
-        //         } else if (msg_type == MESSAGE_TYPE_BYE) {
-        //             current_state = END_STATE;
-        //         } else {
-        //             ERROR_from_user_to_server(line_to_send_from_client, sockfd);
-        //             current_state = ERROR_STATE;
-        //             user_BYE(line_to_send_from_client, sockfd);
-        //             current_state = END_STATE;
-        //         }
-        //     } else if (current_state == END_STATE)  {
-        //         current_state = END_STATE;
-        //     }
-        // }
+            if (current_state == AUTH_STATE){
+                if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
+                    current_state = AUTH_STATE;
+                } else if (msg_type == MESSAGE_TYPE_REPLY) {
+                    current_state = OPEN_STATE;
+                } else if (msg_type == MESSAGE_TYPE_ERR) {
+                    user_BYE(line_to_send_from_client, sockfd);
+                    current_state = END_STATE;
+                } else {
+                    ERROR_from_user_to_server(line_to_send_from_client, sockfd);
+                    current_state = ERROR_STATE;
+                    user_BYE(line_to_send_from_client, sockfd);
+                    current_state = END_STATE;
+                }
+            } else if (current_state == OPEN_STATE) {
+                if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
+                    current_state = OPEN_STATE;
+                } else if (msg_type == MESSAGE_TYPE_REPLY) {
+                    current_state = OPEN_STATE;
+                } else if (msg_type == MESSAGE_TYPE_MSG) {
+                    current_state = OPEN_STATE;
+                } else if (msg_type == MESSAGE_TYPE_ERR) {
+                    user_BYE(line_to_send_from_client, sockfd);
+                    current_state = END_STATE;
+                } else if (msg_type == MESSAGE_TYPE_BYE) {
+                    current_state = END_STATE;
+                } else {
+                    ERROR_from_user_to_server(line_to_send_from_client, sockfd);
+                    current_state = ERROR_STATE;
+                    user_BYE(line_to_send_from_client, sockfd);
+                    current_state = END_STATE;
+                }
+            } else if (current_state == END_STATE)  {
+                current_state = END_STATE;
+            }
+        }
     /*
         // Variable to create regex
         regex_t reegex;

@@ -64,13 +64,16 @@ int main(int argc, char *argv[]){
     int opt;
     bool is_protocol;
     bool is_ip_adress;
+
     bool entered_server_port = false;
+    bool entered_udp_timeout = false;
+    bool entered_max_retransmissions = false;
 
     char *protocol = NULL;
     char *server_address = NULL;
-    uint16_t server_port = 0; 
-    uint16_t udp_timeout = 0; 
-    uint8_t max_retransmissions = 0;
+    uint16_t server_port; 
+    uint16_t udp_timeout; 
+    uint8_t max_retransmissions;
 
     unsigned long ul;
     char *endptr;
@@ -144,6 +147,8 @@ int main(int argc, char *argv[]){
                 // Convert to uint16_t
                 udp_timeout = (uint16_t)ul;
                 // udp_timeout = atoi(optarg);
+
+                entered_udp_timeout = true;
                 break;
             case 'r':
                 ul = strtoul(optarg, &endptr, 10); // Base 10 conversion
@@ -169,6 +174,8 @@ int main(int argc, char *argv[]){
                 // Convert to uint8_t
                 max_retransmissions = (uint8_t)ul;
                 // max_retransmissions = atoi(optarg);
+
+                entered_max_retransmissions = true;
                 break;
             case 'h':
                 // Print program help output and exit
@@ -187,10 +194,18 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+    // setting default values for parameters
     if (entered_server_port == false) {
         server_port = 4567;
     }
 
+    if (entered_udp_timeout == false) {
+        udp_timeout = 250;
+    }
+
+    if (entered_max_retransmissions == false) {
+        max_retransmissions = 3;
+    }
 
     struct hostent *server = gethostbyname(server_address);
     if (server == NULL){
@@ -207,7 +222,7 @@ int main(int argc, char *argv[]){
 
     // tuto budem rozlisovat tcp alebo udp podla parametru zadaneho z terminalu
     if (strcmp(protocol, "udp") == 0) {
-        udp_main(servaddr, server_port);
+        udp_main(servaddr, server_port, udp_timeout, max_retransmissions);
     } else if (strcmp(protocol, "tcp") == 0) {
         tcp_main(servaddr, server_port);
     }

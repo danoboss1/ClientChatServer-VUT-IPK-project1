@@ -12,6 +12,6 @@ Message receiveMessage(int sockfd, struct sockaddr_in* server_addr);
 
 void Handle_message_from_server(const char *buffer, Message *msg);
 
-void udp_main(struct sockaddr_in servaddr, int server_port);
+void udp_main(struct sockaddr_in servaddr, int server_port, int udp_main, int max_retransmissions);
 
 #endif
