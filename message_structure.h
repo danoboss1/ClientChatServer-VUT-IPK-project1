@@ -30,7 +30,8 @@ typedef enum {
     MESSAGE_TYPE_BYE,
     MESSAGE_TYPE_MSG,
     MESSAGE_TYPE_REPLY,
-    MESSAGE_TYPE_NOT_REPLY
+    MESSAGE_TYPE_NOT_REPLY,
+    MESSAGE_TYPE_NONE
 } MessageType;
 
 // Define structures for message arguments

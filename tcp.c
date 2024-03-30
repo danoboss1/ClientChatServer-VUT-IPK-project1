@@ -153,7 +153,9 @@ void ERROR_from_user_to_server(char *line_to_send_from_client, int sockfd){
         //sprintf(line_to_send_from_client, "JOIN %s AS %s\r\n", channelID, display_name);
 }
 
-void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int sockfd){
+MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int sockfd){
+    MessageType checked_msg;
+
     size_t message_size;
     ssize_t bytes_sent;
     bool going_to_send_message = false;
@@ -175,6 +177,7 @@ void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int
         sprintf(line_to_send_from_client, "AUTH %s AS %s USING %s\r\n", username, display_name, secret);
 
         going_to_send_message = true;
+        checked_msg = MESSAGE_TYPE_AUTH;
         // AUTH {Username} AS {DisplayName} USING {Secret}\r\n
     } else if (strncmp(input_line, JOIN_COMMAND_TO_CHECK, strlen(JOIN_COMMAND_TO_CHECK)) == 0) {
         char delete_join_zaciatok[5] = "";
@@ -185,12 +188,14 @@ void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int
         sprintf(line_to_send_from_client, "JOIN %s AS %s\r\n", channelID, display_name);
         
         going_to_send_message = true;
+        checked_msg = MESSAGE_TYPE_JOIN;
         // JOIN {ChannelID} AS {DisplayName}\r\n
     } else if (strncmp(input_line, RENAME_COMMAND_TO_CHECK, strlen(RENAME_COMMAND_TO_CHECK)) == 0) {
         char delete_rename_zaciatok[7] = "";
 
         sscanf(input_line, "%s %s", delete_rename_zaciatok, display_name);
 
+        checked_msg = MESSAGE_TYPE_NONE;
         // tu menim iba display name a nic neposielam
     } else if (strncmp(input_line, HELP_COMMAND_TO_CHECK, strlen(HELP_COMMAND_TO_CHECK)) == 0) {
         printf("U have used /help command!");
@@ -207,10 +212,13 @@ void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int
         printf("  /help\n");
         printf("  PARAMETERS: None\n");
         printf("  DESCRIPTION: Prints out supported local commands with their parameters and a description\n");
+
+        checked_msg = MESSAGE_TYPE_NONE;
     } else {
         sprintf(line_to_send_from_client, "MSG FROM %s IS %s\r\n", display_name, input_line);
 
         going_to_send_message = true;
+        checked_msg = MESSAGE_TYPE_MSG;
         //MSG FROM {DisplayName} IS {MessageContent}\r\n
     }
 
@@ -226,6 +234,8 @@ void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int
         }
         // write a read
         // vlozim do prazdneho bufferu spravu a zistim aky velky je ten buffer
+
+        return checked_msg;
     }
 }
 
@@ -277,18 +287,41 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
         if (fds[0].revents & POLLIN) {
             fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
 
+            msg_type = Handle_user_input_tcp(input_line, line_to_send_from_client, sockfd);
+
             if (current_state == START_STATE){
                 if (msg_type == MESSAGE_TYPE_AUTH) {
                     current_state = AUTH_STATE;
+                } else if (msg_type == MESSAGE_TYPE_MSG) {
+                    fprintf(stderr, "ERR: Cannot send message in this state, use /help command\n");
+                    current_state = START_STATE;
+                } else if (msg_type == MESSAGE_TYPE_JOIN){
+                    fprintf(stderr, "ERR: Cannot join server by channelID in this state, use /help command\n");
+                    current_state = START_STATE;
+                } else if (msg_type == MESSAGE_TYPE_NONE) {
+                    current_state = START_STATE;
                 } 
+                // tu bude mozno nejaky error pri inych typoch
             } else if (current_state == AUTH_STATE){
                 if (msg_type == MESSAGE_TYPE_BYE) {
+                    user_BYE(line_to_send_from_client, sockfd);
                     current_state = END_STATE;
-                } 
+                } else if (msg_type == MESSAGE_TYPE_MSG) {
+                    fprintf(stderr, "ERR: Cannot send message in this state, use /help command\n");
+                    current_state = AUTH_STATE;
+                } else if (msg_type == MESSAGE_TYPE_JOIN){
+                    fprintf(stderr, "ERR: Cannot join server by channelID in this state, use /help command\n");
+                    current_state = AUTH_STATE;
+                } else if (msg_type == MESSAGE_TYPE_NONE) {
+                    current_state = AUTH_STATE;
+                }
+                // tu bude mozno nejaky error pri inych typoch
             } else if (current_state == OPEN_STATE){
                 if (msg_type == MESSAGE_TYPE_JOIN) {
                     current_state = OPEN_STATE;
                 } else if (msg_type == MESSAGE_TYPE_MSG) {
+                    current_state = OPEN_STATE;
+                } else if (msg_type == MESSAGE_TYPE_NONE) {
                     current_state = OPEN_STATE;
                 }
             }
@@ -357,13 +390,13 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                 } else if (msg_type == MESSAGE_TYPE_REPLY) {
                     current_state = OPEN_STATE;
                 } else if (msg_type == MESSAGE_TYPE_ERR) {
-                    // SendBye od uzivatela este
+                    user_BYE(line_to_send_from_client, sockfd);
                     current_state = END_STATE;
                 } else {
-                    // SendErr od uzivatela este
+                    ERROR_from_user_to_server(line_to_send_from_client, sockfd);
                     current_state = ERROR_STATE;
-                    // SendBye od uzivatela este
-                    // A IDES DO END_STATE
+                    user_BYE(line_to_send_from_client, sockfd);
+                    current_state = END_STATE;
                 }
             } else if (current_state == OPEN_STATE) {
                 if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
@@ -373,19 +406,29 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                 } else if (msg_type == MESSAGE_TYPE_MSG) {
                     current_state = OPEN_STATE;
                 } else if (msg_type == MESSAGE_TYPE_ERR) {
-                    // SendBye od uzivatela este
+                    user_BYE(line_to_send_from_client, sockfd);
                     current_state = END_STATE;
                 } else if (msg_type == MESSAGE_TYPE_BYE) {
                     current_state = END_STATE;
                 } else {
-                    // SendErr od uzivatela este
+                    ERROR_from_user_to_server(line_to_send_from_client, sockfd);
                     current_state = ERROR_STATE;
-                    // SendBye od uzivatela este
-                    // A IDES DO END_STATE
+                    user_BYE(line_to_send_from_client, sockfd);
+                    current_state = END_STATE;
                 }
+            } else if (current_state == END_STATE)  {
+                current_state = END_STATE;
             }
 
         }
-    close(sockfd);
+
+
+        if (current_state == END_STATE)  {
+            break;
+        }
     }
+
+    close(sockfd);
+    exit(0);
+
 }
