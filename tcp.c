@@ -85,7 +85,7 @@ MessageType Handle_server_messages_tcp(char *received_message){
         case MESSAGE_TYPE_ERR:
             {
                 sscanf(received_message, "ERR FROM %20[^ ] IS %1400[^\n]", display_name_server_tcp, message_content_server_tcp);
-                fprintf(stderr, "%s: %s\n", display_name_server_tcp, message_content_server_tcp);
+                fprintf(stderr, "ERR FROM %s: %s\n", display_name_server_tcp, message_content_server_tcp);
             }
             break;
         case MESSAGE_TYPE_REPLY:
@@ -175,6 +175,7 @@ void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int
 
         // tu menim iba display name a nic neposielam
     } else if (strncmp(input_line, HELP_COMMAND_TO_CHECK, strlen(HELP_COMMAND_TO_CHECK)) == 0) {
+        printf("U have used /help command!");
         printf("Commands:\n");
         printf("  /auth\n");
         printf("  PARAMETERS: {Username} {Secret} {DisplayName}\n");
@@ -212,6 +213,7 @@ void Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int
 
 
 void tcp_main(struct sockaddr_in servaddr, int server_port) {
+
 
     char input_line[FULL_MESSAGE_BUFFER + 1];
 
@@ -327,8 +329,6 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                 // For example, you may choose to set the entire received_message to '\0'
                 memset(received_message, '\0', sizeof(received_message));
             }
-
-
 
             // tu spracujem spravu a zistim aky je to typ
             // message_type = 'ERR';
