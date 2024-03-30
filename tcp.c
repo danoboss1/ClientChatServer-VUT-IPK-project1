@@ -275,7 +275,7 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
     while(true){ 
         // Call tcp_handler manually
         // tcp_handler(SIGINT); // This will call tcp_handler as if SIGINT was receive
-    signal(SIGINT, tcp_handler);
+        signal(SIGINT, tcp_handler);
 
         // tu bude nejaky stavovy podla zadania
         // do terminalu pisem rovnako, len serveru posielam iny format, aj on mne posiela v inom formate
@@ -287,9 +287,24 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
             exit(EXIT_FAILURE);
         }
 
+
+
+
         // tuto budem este informovat uzivatela ked zada zly vstup
         if (fds[0].revents & POLLIN) {
+
+            // printf("I PRESSED ENTER 1\n");
+
             fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
+
+            // printf("I PRESSED ENTER 2\n");
+
+            // // Clear the input buffer
+            // int c;
+            // while ((c = getchar()) != '\n' && c != EOF) {}
+
+            // Flush the input buffer
+            // fflush(stdin);
 
             msg_type = Handle_user_input_tcp(input_line, line_to_send_from_client, sockfd);
 
@@ -330,16 +345,60 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                 }
             }
 
+            // printf("sucasny stav %d\n", current_state);
                 // write a read
                 // vlozim do prazdneho bufferu spravu a zistim aky velky je ten buffer
 
 
                 // AUTH {Username} AS {DisplayName} USING {Secret}\r\n
 
-            }
+        }
         
     // /r/n bude v tom bufferi, ktory posielam aj v bufferi ktory prijimam
     
+        // // toto je testovaci if
+        // printf("sucasny stav %d\n", current_state);
+        // if (current_state == AUTH_STATE){
+        //     char test_reply_ok[FULL_MESSAGE_BUFFER + 1] = "REPLY OK IS SKUSKA 1 2 3 IDE";
+        //     msg_type = Handle_server_messages_tcp(test_reply_ok);
+        //     printf("sucasny typ spravy %d\n", msg_type); 
+
+        //     if (current_state == AUTH_STATE){
+        //         if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
+        //             current_state = AUTH_STATE;
+        //         } else if (msg_type == MESSAGE_TYPE_REPLY) {
+        //             current_state = OPEN_STATE;
+        //         } else if (msg_type == MESSAGE_TYPE_ERR) {
+        //             user_BYE(line_to_send_from_client, sockfd);
+        //             current_state = END_STATE;
+        //         } else {
+        //             ERROR_from_user_to_server(line_to_send_from_client, sockfd);
+        //             current_state = ERROR_STATE;
+        //             user_BYE(line_to_send_from_client, sockfd);
+        //             current_state = END_STATE;
+        //         }
+        //     } else if (current_state == OPEN_STATE) {
+        //         if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
+        //             current_state = OPEN_STATE;
+        //         } else if (msg_type == MESSAGE_TYPE_REPLY) {
+        //             current_state = OPEN_STATE;
+        //         } else if (msg_type == MESSAGE_TYPE_MSG) {
+        //             current_state = OPEN_STATE;
+        //         } else if (msg_type == MESSAGE_TYPE_ERR) {
+        //             user_BYE(line_to_send_from_client, sockfd);
+        //             current_state = END_STATE;
+        //         } else if (msg_type == MESSAGE_TYPE_BYE) {
+        //             current_state = END_STATE;
+        //         } else {
+        //             ERROR_from_user_to_server(line_to_send_from_client, sockfd);
+        //             current_state = ERROR_STATE;
+        //             user_BYE(line_to_send_from_client, sockfd);
+        //             current_state = END_STATE;
+        //         }
+        //     } else if (current_state == END_STATE)  {
+        //         current_state = END_STATE;
+        //     }
+        // }
     /*
         // Variable to create regex
         regex_t reegex;
@@ -385,8 +444,7 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
                 memset(received_message, '\0', sizeof(received_message));
             }
 
-            // tu spracujem spravu a zistim aky je to typ
-            // message_type = 'ERR';
+            msg_type = Handle_server_messages_tcp(received_message);
 
             if (current_state == AUTH_STATE){
                 if (msg_type == MESSAGE_TYPE_NOT_REPLY) {
@@ -430,6 +488,7 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
         if (current_state == END_STATE)  {
             break;
         }
+        // printf("sucasny stav %d\n", current_state);
     }
 
     close(sockfd);
