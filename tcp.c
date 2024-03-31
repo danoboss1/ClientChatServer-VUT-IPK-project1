@@ -157,7 +157,7 @@ void ERROR_from_user_to_server(char *line_to_send_from_client, int sockfd){
 }
 
 // Processes user commands and messages
-MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int sockfd){
+MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_client, int sockfd, State current_state){
 
     MessageType checked_msg;
 
@@ -183,7 +183,9 @@ MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_clie
         // AUTH {Username} AS {DisplayName} USING {Secret}\r\n
         sprintf(line_to_send_from_client, "AUTH %s AS %s USING %s\r\n", username, display_name, secret);
 
-        going_to_send_message = true;
+        if (current_state == START_STATE){
+            going_to_send_message = true;
+        }
         checked_msg = MESSAGE_TYPE_AUTH;
     // Join command
     } else if (strncmp(input_line, JOIN_COMMAND_TO_CHECK, strlen(JOIN_COMMAND_TO_CHECK)) == 0) {
@@ -195,8 +197,10 @@ MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_clie
 
         // JOIN {ChannelID} AS {DisplayName}\r\n
         sprintf(line_to_send_from_client, "JOIN %s AS %s\r\n", channelID, display_name);
-        
-        going_to_send_message = true;
+
+        if (current_state == OPEN_STATE){
+            going_to_send_message = true;
+        }
         checked_msg = MESSAGE_TYPE_JOIN;
     // Rename command
     } else if (strncmp(input_line, RENAME_COMMAND_TO_CHECK, strlen(RENAME_COMMAND_TO_CHECK)) == 0) {
@@ -232,7 +236,10 @@ MessageType Handle_user_input_tcp(char *input_line, char *line_to_send_from_clie
         //MSG FROM {DisplayName} IS {MessageContent}\r\n
         sprintf(line_to_send_from_client, "MSG FROM %s IS %s\r\n", display_name, input_line);
 
-        going_to_send_message = true;
+        if (current_state == OPEN_STATE){
+            going_to_send_message = true;
+        }
+        
         checked_msg = MESSAGE_TYPE_MSG;
     }
 
@@ -302,7 +309,7 @@ void tcp_main(struct sockaddr_in servaddr, int server_port) {
             fgets(input_line, FULL_MESSAGE_BUFFER + 1, stdin);
 
             // Process user message and returns a message type
-            msg_type = Handle_user_input_tcp(input_line, line_to_send_from_client, sockfd);
+            msg_type = Handle_user_input_tcp(input_line, line_to_send_from_client, sockfd, current_state);
 
             // Finite state machine for processing user inputs
             if (current_state == START_STATE){
