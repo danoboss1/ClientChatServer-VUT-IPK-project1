@@ -15,7 +15,7 @@
 #include <netdb.h>
 
 // client je udp
-#include "client.h"
+#include "udp.h"
 #include "tcp.h"
 // #include "message_structure.h"
 
