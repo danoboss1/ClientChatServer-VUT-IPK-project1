@@ -6,7 +6,6 @@
 
 #include <assert.h>
 
-// TU JE NIECO ZLE S TYMI CISLAMI A ICH POSIELANIM
 void test_CONFIRM(){
     uint8_t type = 0x00;
     uint16_t ref_message_id = 123;
@@ -58,7 +57,6 @@ void test_REPLY() {
     printf("Message Contents: %s\n", received_message.data.reply.messageContent);
 }
 
-// Implement tests for other message types similarly
 void test_AUTH() {
     uint8_t type = 0x02;
     uint16_t message_id = 200;
@@ -66,8 +64,6 @@ void test_AUTH() {
     char username_test[] = "robko";
     char display_name_test[] = "xrobert04";
     char secret_test[] = "nema";
-
-    // size_t message_contents_length = strlen(message_contents);
 
     // Populate buffer
     size_t offset = sizeof(uint8_t) + sizeof(uint16_t);
@@ -103,7 +99,6 @@ void test_AUTH() {
     printf("auth secret: %s\n", received_message.data.auth.secret);
 }
 
-// Implement tests for other message types similarly
 void test_JOIN() {
     uint8_t type = 0x03;
     uint16_t message_id = 300;
@@ -177,14 +172,12 @@ void test_MSG() {
     printf("msg messagecontents: %s\n", received_message.data.msg.messageContent);
 }
 
-
 void test_ERR() {
     uint8_t type = 0xFE;
     uint16_t message_id = 800;
 
     char display_name_test[] = "messenger800";
     char message_contents_test[] = "Sample message contents";
-
 
     // Populate buffer
     size_t offset = sizeof(uint8_t) + sizeof(uint16_t);
@@ -238,8 +231,9 @@ void test_BYE() {
     printf("BYE FUNGUJE DOBRE \n");
 }
 
+// main function for calling the tests
 int main() {
-    // Create a Message structure for the confirm message
+
     test_CONFIRM();
     test_REPLY();
     test_AUTH();
