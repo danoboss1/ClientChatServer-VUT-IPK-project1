@@ -11,7 +11,8 @@
 
 #define FULL_MESSAGE_BUFFER 1500
 
-//FINITE STATE MACHINE 
+
+// Finite state machine
 typedef enum {
     START_STATE,
     AUTH_STATE,
@@ -20,9 +21,7 @@ typedef enum {
     END_STATE
 } State;
 
-// Define message types
-// uvidim ci toto tu necham
-// lebo to robi chybu ked sa snazim priradin 0x00, 0x01 hodnoty
+// Message types
 typedef enum {
     MESSAGE_TYPE_AUTH,
     MESSAGE_TYPE_JOIN,
@@ -31,10 +30,12 @@ typedef enum {
     MESSAGE_TYPE_MSG,
     MESSAGE_TYPE_REPLY,
     MESSAGE_TYPE_NOT_REPLY,
-    MESSAGE_TYPE_NONE
+    MESSAGE_TYPE_NONE,
+    MESSAGE_TYPE_WRONG
 } MessageType;
 
-// Define structures for message arguments
+
+// Structures for UDP message arguments
 typedef struct {
     char username[USERNAME_MAX_LENGTH + 1]; 
     char displayName[DISPLAY_NAME_MAX_LENGTH + 1]; 
@@ -57,7 +58,7 @@ typedef struct {
     char messageContent[MESSAGE_CONTENT_MAX_LENGTH + 1]; 
 } StructReply;
 
-// Define message structure
+// Message structure for UDP
 typedef struct {
     uint8_t type;
     uint16_t messageID;
@@ -70,10 +71,10 @@ typedef struct {
     } data;
 } Message;
 
+// Port for UDP netcat testing
 #define PORT 4567
-#define MAXLINE 100
 
-// Define message types
+// UDP Message types
 #define CONFIRM 0x00
 #define REPLY   0x01
 #define AUTH    0x02
@@ -81,5 +82,6 @@ typedef struct {
 #define MSG     0x04
 #define ERR     0xFE
 #define BYE     0xFF
+
 
 #endif
