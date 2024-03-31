@@ -90,8 +90,9 @@ void Handle_message_from_server(const char *buffer, Message *msg){
             break;
         default:
             // Change this for whole UDP logic implementation
-            fprintf(stderr, "Not supported message type from server\n");
-            exit(1);
+            // fprintf(stderr, "Not supported message type from server\n");
+            break;
+            // exit(1);
     }
 }
 

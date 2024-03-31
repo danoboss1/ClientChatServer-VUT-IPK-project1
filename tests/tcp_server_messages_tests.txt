@@ -1,0 +1,27 @@
+    // tests for tcp server messages
+    // char test_reply_ok[FULL_MESSAGE_BUFFER + 1] = "REPLY OK IS SKUSKA 1 2 3 IDE\r\n";
+    // char test_reply_nok[FULL_MESSAGE_BUFFER + 1] = "REPLY NOK IS SKUSKA 1 2 3 IDE";
+    // char test_message[FULL_MESSAGE_BUFFER + 1] = "MSG FROM DISPLAYNAME IS SKUSKA 1 2 3 IDE";
+    // char test_error[FULL_MESSAGE_BUFFER + 1] = "ERR FROM DISPLAYNAME IS SKUSKA 1 2 3 IDE";
+    // char test_bye[FULL_MESSAGE_BUFFER + 1] = "BYE";
+
+    // size_t test_reply_ok_length = strlen(test_reply_ok);
+
+    // test_reply_ok[test_reply_ok_length - 2] = '\0';
+
+    // printf("%s", test_reply_ok);
+
+    // msg_type = Handle_server_messages_tcp(test_reply_ok);
+    // printf("%d", msg_type); 
+    // msg_type = Handle_server_messages_tcp(test_reply_nok);
+    // printf("%d", msg_type);
+
+    // ^MSG FROM ([!-~]{1,20}) IS (.{1,1400})$
+    // msg je 4 takze funguje
+    // ^ERR FROM ([!-~]{1,20}) IS (.{1,1400})$
+    // err je 2 takze funguje
+    // ^REPLY (OK|NOK) IS (.{1,1400})$
+    // reply ok je 5 takze funguje
+    // reply nok je 6 takze funguje
+    // ^BYE
+    // bye je 3 takze to funguje

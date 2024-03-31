@@ -1,0 +1,20 @@
+    char test_auth[FULL_MESSAGE_BUFFER + 1] = "/auth username secret JOZEF_PRVY";
+    char test_join[FULL_MESSAGE_BUFFER + 1] = "/join channelID";
+    char test_rename[FULL_MESSAGE_BUFFER + 1] = "/rename ROBERT_DRUHY";
+    char test_help[FULL_MESSAGE_BUFFER + 1] = "/help";
+    char test_message[FULL_MESSAGE_BUFFER + 1] = "Hola, que pasa?";
+
+    // ERR FROM {DisplayName} IS {MessageContent}\r\n
+    // REPLY {"OK"|"NOK"} IS {MessageContent}\r\n
+    // AUTH {Username} AS {DisplayName} USING {Secret}\r\n
+    // JOIN {ChannelID} AS {DisplayName}\r\n
+    // MSG FROM {DisplayName} IS {MessageContent}\r\n
+
+    Handle_user_input_tcp(test_auth, line_to_send_from_client, sockfd);
+    printf("%s", display_name);
+    // Handle_user_input_tcp(test_join, line_to_send_from_client, sockfd);
+    Handle_user_input_tcp(test_rename, line_to_send_from_client, sockfd);
+    Handle_user_input_tcp(test_help, line_to_send_from_client, sockfd);
+    Handle_user_input_tcp(test_message, line_to_send_from_client, sockfd);
+    // user_BYE(line_to_send_from_client, sockfd);
+    printf("%s", display_name);

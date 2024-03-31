@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "udp.h"
+#include "../udp.h"
 
 #include <assert.h>
 
@@ -21,7 +21,7 @@ void test_CONFIRM(){
     Message received_message;
 
     // Parse the received message buffer using Handle_message_from_server
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
@@ -49,7 +49,7 @@ void test_REPLY() {
 
     Message received_message;
 
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
@@ -94,7 +94,7 @@ void test_AUTH() {
 
     Message received_message;
 
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
@@ -132,7 +132,7 @@ void test_JOIN() {
 
     Message received_message;
 
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
@@ -169,7 +169,7 @@ void test_MSG() {
 
     Message received_message;
 
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
@@ -207,7 +207,7 @@ void test_ERR() {
 
     Message received_message;
 
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
@@ -231,7 +231,7 @@ void test_BYE() {
 
     Message received_message;
 
-    size_t bytes_processed = Handle_message_from_server(buffer, &received_message);
+    Handle_message_from_server(buffer, &received_message);
 
     printf("Type: %d\n", received_message.type);
     printf("Message ID: %d\n", received_message.messageID);
